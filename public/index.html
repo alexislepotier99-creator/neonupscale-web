@@ -6,6 +6,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NeonUpscale</title>
+<meta name="theme-color" content="#050409">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="data:image/png;base64,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">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NeonUpscale">
 <meta name="google-signin-client_id" content="REPLACE_WITH_YOUR_GOOGLE_CLIENT_ID">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -322,6 +330,13 @@
     .enhance-layout{grid-template-columns:1fr;}
     .enhance-preview-col{min-height:260px;}
   }
+  @media (max-width:640px){
+    nav{flex-wrap:wrap;row-gap:10px;}
+    .nav-tabs{order:3;width:100%;justify-content:flex-start;}
+    .nav-actions{flex-wrap:wrap;justify-content:flex-end;row-gap:8px;gap:10px;}
+    .nav-cta{padding:8px 14px;font-size:13px;}
+    .brand-name{font-size:14px;}
+  }
 </style>
 <div class="wrap">
   <nav>
@@ -384,10 +399,29 @@
     <div id="enhanceFormArea" style="display:none;">
       <div class="enhance-layout">
         <div class="enhance-preview-col" id="enhancePreviewCol">
-          <p id="enhanceEmptyState" class="enhance-empty" onclick="document.getElementById('enhanceFile').click()">Choose a photo to see the preview here.</p>
+          <div id="enhanceEmptyState" class="enhance-empty" onclick="document.getElementById('enhanceFile').click()">
+            <p style="margin:0 0 16px;">Choose a photo to see the preview here.</p>
+            <button type="button" class="btn-ghost" onclick="event.stopPropagation();document.getElementById('enhanceFile').click()">Choose a photo</button>
+          </div>
           <div id="enhancePreviewWrap" style="display:none;">
             <div id="enhancePreviewFrame" class="enhance-preview-frame">
               <img id="enhancePreviewImg" class="enhance-preview-img" src="" alt="Preview">
+              <div id="enhanceProgress" style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(5,4,10,.55);z-index:7;">
+                <div class="progress-ring">
+                  <svg width="120" height="120" viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="62" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10"></circle>
+                    <circle cx="70" cy="70" r="62" fill="none" stroke="url(#progressGrad)" stroke-width="10" stroke-linecap="round" id="progressCircle" transform="rotate(-90 70 70)"></circle>
+                    <defs>
+                      <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#7C3AED"></stop>
+                        <stop offset="100%" stop-color="#EC4899"></stop>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div class="progress-label" id="progressLabel">0%</div>
+                </div>
+                <p style="color:#fff;font-size:14px;margin:0;">Enhancement in progress</p>
+              </div>
             </div>
           </div>
           <div id="enhanceResult" style="display:none;text-align:center;">
@@ -442,22 +476,6 @@
             <button class="btn-primary" id="enhanceSubmitBtn" onclick="submitEnhance()" disabled>Enhance</button>
           </div>
           <p id="enhanceStatus" style="color:var(--text-dim);font-size:14px;margin:0;text-align:center;"></p>
-          <div id="enhanceProgress" style="display:none;flex-direction:column;align-items:center;gap:14px;">
-            <div class="progress-ring">
-              <svg width="140" height="140" viewBox="0 0 140 140">
-                <circle cx="70" cy="70" r="62" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10"></circle>
-                <circle cx="70" cy="70" r="62" fill="none" stroke="url(#progressGrad)" stroke-width="10" stroke-linecap="round" id="progressCircle" transform="rotate(-90 70 70)"></circle>
-                <defs>
-                  <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#7C3AED"></stop>
-                    <stop offset="100%" stop-color="#EC4899"></stop>
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div class="progress-label" id="progressLabel">0%</div>
-            </div>
-            <p style="color:var(--text-dim);font-size:14px;margin:0;">Enhancement in progress</p>
-          </div>
         </div>
       </div>
     </div>
@@ -606,7 +624,38 @@
     <div id="googleBtnContainer" style="display:flex;justify-content:center;min-height:44px;"></div>
     <p id="googleFallbackNote" class="modal-foot" style="margin-top:16px;" hidden>Google sign-in isn't configured on this site yet (GOOGLE_CLIENT_ID missing).</p>
 
-    <p class="modal-foot">Other login methods are coming soon.</p>
+    <div style="display:flex;align-items:center;gap:10px;margin:18px 0;">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.12);"></div>
+      <span style="color:var(--text-dim);font-size:12px;">OR</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.12);"></div>
+    </div>
+
+    <div id="authFormStep">
+      <form id="authForm" onsubmit="event.preventDefault();submitAuthForm();">
+        <label id="authNameField">Name
+          <input type="text" id="authName" autocomplete="name" placeholder="Your name">
+        </label>
+        <label>Email
+          <input type="email" id="authEmail" autocomplete="email" required>
+        </label>
+        <label>Password
+          <input type="password" id="authPassword" autocomplete="current-password" required minlength="8" placeholder="8 characters minimum">
+        </label>
+        <p id="authError" style="color:#f87171;font-size:13px;margin:0;" hidden></p>
+        <button type="submit" class="btn-primary" id="authSubmitBtn">Sign up</button>
+      </form>
+      <p class="modal-foot" id="authToggleFoot">Already have an account? <a href="#" onclick="toggleAuthMode();return false;">Log in</a></p>
+    </div>
+
+    <div id="verifyStep" style="display:none;">
+      <p style="color:var(--text-dim);font-size:14px;margin:0 0 14px;">We sent a 6-digit code to <strong id="verifyEmailLabel"></strong>.</p>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text-dim);font-weight:600;">Verification code
+        <input type="text" id="verifyCode" inputmode="numeric" maxlength="6" placeholder="123456" style="padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);color:#fff;font-size:18px;letter-spacing:4px;text-align:center;">
+      </label>
+      <p id="verifyError" style="color:#f87171;font-size:13px;margin:8px 0 0;" hidden></p>
+      <button type="button" class="btn-primary" onclick="submitVerifyCode()" style="margin-top:14px;width:100%;padding:13px;font-size:15px;">Verify</button>
+      <p class="modal-foot">Didn't get it? <a href="#" onclick="resendCode();return false;">Resend code</a></p>
+    </div>
   </div>
 </div>
 
@@ -791,10 +840,170 @@
       const ctx = document.getElementById('authContext');
       if (ctx) { ctx.hidden = true; ctx.textContent = ''; }
     }
+    // On repart toujours du formulaire d'inscription/connexion (pas de l'etape "code")
+    // quand on rouvre la fenetre depuis zero.
+    if (!pendingVerifyEmail) {
+      showAuthFormStep();
+    }
     authOverlay.classList.add('show');
   }
   function closeAuth(){ authOverlay.classList.remove('show'); }
   function cancelAuth(){ pendingPlan = null; closeAuth(); }
+
+  // ---------------- Compte par email + mot de passe ----------------
+  let authMode = 'signup'; // 'signup' | 'login'
+  let pendingVerifyEmail = null;
+
+  function setAuthError(msg){
+    const el = document.getElementById('authError');
+    el.textContent = msg || '';
+    el.hidden = !msg;
+  }
+  function setVerifyError(msg){
+    const el = document.getElementById('verifyError');
+    el.textContent = msg || '';
+    el.hidden = !msg;
+  }
+
+  function showAuthFormStep(){
+    document.getElementById('authFormStep').style.display = '';
+    document.getElementById('verifyStep').style.display = 'none';
+    setAuthError('');
+  }
+  function showVerifyStep(email){
+    pendingVerifyEmail = email;
+    document.getElementById('verifyEmailLabel').textContent = email;
+    document.getElementById('authFormStep').style.display = 'none';
+    document.getElementById('verifyStep').style.display = 'block';
+    setVerifyError('');
+    document.getElementById('verifyCode').value = '';
+  }
+
+  function toggleAuthMode(){
+    authMode = authMode === 'signup' ? 'login' : 'signup';
+    const nameField = document.getElementById('authNameField');
+    const submitBtn = document.getElementById('authSubmitBtn');
+    const foot = document.getElementById('authToggleFoot');
+    setAuthError('');
+    if (authMode === 'login') {
+      nameField.style.display = 'none';
+      submitBtn.textContent = 'Log in';
+      foot.innerHTML = 'No account yet? <a href="#" onclick="toggleAuthMode();return false;">Sign up</a>';
+    } else {
+      nameField.style.display = '';
+      submitBtn.textContent = 'Sign up';
+      foot.innerHTML = 'Already have an account? <a href="#" onclick="toggleAuthMode();return false;">Log in</a>';
+    }
+  }
+
+  function onAuthSuccess(user, successMessage){
+    currentUser = user;
+    closeAuth();
+    updateAuthUI();
+    if (pendingPlan) {
+      const plan = pendingPlan.plan;
+      pendingPlan = null;
+      startCheckout(plan);
+    } else if (pendingTabAfterLogin) {
+      const tab = pendingTabAfterLogin;
+      pendingTabAfterLogin = null;
+      showTab(tab);
+    } else {
+      showToast(successMessage || ('Logged in as ' + (user.name || user.email) + '.'));
+    }
+  }
+
+  const AUTH_ERROR_MESSAGES = {
+    invalid_email: 'Please enter a valid email address.',
+    weak_password: 'Password must be at least 8 characters.',
+    email_already_registered: 'This email is already registered. Try logging in instead.',
+    invalid_credentials: 'Incorrect email or password.',
+    missing_fields: 'Please fill in all fields.',
+    email_service_not_configured: 'Email sending isn\'t configured on this site yet. Please try again later.',
+  };
+
+  async function submitAuthForm(){
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const name = document.getElementById('authName').value.trim();
+    setAuthError('');
+
+    if (authMode === 'signup') {
+      try {
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password, name }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'signup_failed');
+        showVerifyStep(data.email || email);
+      } catch (err) {
+        setAuthError(AUTH_ERROR_MESSAGES[err.message] || 'Sign up failed. Please try again.');
+      }
+    } else {
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          if (data.error === 'email_not_verified') {
+            showVerifyStep(email);
+            setVerifyError('Please verify your email first.');
+            return;
+          }
+          throw new Error(data.error || 'login_failed');
+        }
+        onAuthSuccess(data.user);
+      } catch (err) {
+        setAuthError(AUTH_ERROR_MESSAGES[err.message] || 'Login failed. Please try again.');
+      }
+    }
+  }
+
+  async function submitVerifyCode(){
+    const code = document.getElementById('verifyCode').value.trim();
+    setVerifyError('');
+    if (!code) { setVerifyError('Please enter the code.'); return; }
+    try {
+      const res = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: pendingVerifyEmail, code }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const messages = { invalid_code: 'Incorrect code.', code_expired: 'This code has expired. Request a new one.' };
+        throw new Error(messages[data.error] || 'Verification failed.');
+      }
+      pendingVerifyEmail = null;
+      onAuthSuccess(data.user, 'Email verified — you\'re logged in.');
+    } catch (err) {
+      setVerifyError(err.message || 'Verification failed.');
+    }
+  }
+
+  async function resendCode(){
+    if (!pendingVerifyEmail) return;
+    try {
+      await fetch('/api/auth/resend-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: pendingVerifyEmail }),
+      });
+      setVerifyError('');
+      showToast('Code resent — check your inbox.');
+    } catch {
+      setVerifyError('Could not resend the code. Please try again.');
+    }
+  }
 
   function planLabelFr(p){ return p === 'lifetime' ? 'lifetime' : (p === 'weekly' ? 'weekly' : 'none'); }
 
@@ -971,7 +1180,18 @@
       updateEnhanceVisibility();
       return;
     }
-    btn.textContent = currentUser.name ? currentUser.name.split(' ')[0] : currentUser.email;
+    if (currentUser.picture) {
+      btn.textContent = '';
+      const avatar = document.createElement('img');
+      avatar.src = currentUser.picture;
+      avatar.alt = currentUser.name || currentUser.email;
+      avatar.referrerPolicy = 'no-referrer';
+      avatar.style.cssText = 'width:28px;height:28px;border-radius:50%;object-fit:cover;display:block;border:1px solid rgba(255,255,255,.25);';
+      avatar.onerror = () => { btn.textContent = currentUser.name ? currentUser.name.split(' ')[0] : currentUser.email; };
+      btn.appendChild(avatar);
+    } else {
+      btn.textContent = currentUser.name ? currentUser.name.split(' ')[0] : currentUser.email;
+    }
     btn.onclick = () => showToast(
       'Logged in: ' + currentUser.email +
       (currentUser.plan !== 'none' ? ' · plan ' + planLabelFr(currentUser.plan) + ' (' + currentUser.planStatus + ')' : ' · no active plan')
@@ -1012,20 +1232,7 @@
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'auth_failed');
-      currentUser = data.user;
-      closeAuth();
-      updateAuthUI();
-      if (pendingPlan) {
-        const plan = pendingPlan.plan;
-        pendingPlan = null;
-        startCheckout(plan);
-      } else if (pendingTabAfterLogin) {
-        const tab = pendingTabAfterLogin;
-        pendingTabAfterLogin = null;
-        showTab(tab);
-      } else {
-        showToast('Logged in as ' + (currentUser.name || currentUser.email) + '.');
-      }
+      onAuthSuccess(data.user);
     } catch (err) {
       showToast('Login failed. Please try again.');
     }
