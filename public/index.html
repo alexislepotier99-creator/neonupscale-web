@@ -701,17 +701,55 @@
 
   let compareAspectRatio = 1;
 
-  function showCompareResult(beforeUrl, afterUrl){
+  // Le navigateur affiche parfois des lignes blanches en pointille sur les bords diagonaux
+  // quand il doit reduire une tres grande photo (ex: 3000px) dans une toute petite case
+  // (ex: 480px) - c'est un bug d'affichage de Chrome/Edge, pas un souci avec la photo elle
+  // meme (le fichier telecharge est toujours intact). On evite ca en redimensionnant nous
+  // memes la photo en douceur (via un canvas, en haute qualite) a une taille plus proche de
+  // celle affichee a l'ecran, AVANT de l'afficher. Le lien de telechargement, lui, garde
+  // toujours l'image d'origine en pleine resolution.
+  function downscaleForDisplay(url, maxWidth) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / (img.naturalWidth || maxWidth));
+        if (scale >= 1) { resolve(url); return; }
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.92));
+        } catch (e) {
+          resolve(url); // si le canvas echoue (ex: image d'une autre origine), on garde l'originale
+        }
+      };
+      img.onerror = () => resolve(url);
+      img.src = url;
+    });
+  }
+
+  async function showCompareResult(beforeUrl, afterUrl){
     const resultEl = document.getElementById('enhanceResult');
     const compareAfter = document.getElementById('compareAfter');
     const download = document.getElementById('compareDownload');
     const emptyState = document.getElementById('enhanceEmptyState');
     if (emptyState) emptyState.style.display = 'none';
-    compareBefore.src = beforeUrl;
-    compareAfter.src = afterUrl;
+    download.href = afterUrl; // toujours la version complete, non retouchee pour l'affichage
+
+    const displayMax = Math.max(1600, window.innerWidth || 0, window.innerHeight || 0);
+    const [beforeDisplayUrl, afterDisplayUrl] = await Promise.all([
+      downscaleForDisplay(beforeUrl, displayMax),
+      downscaleForDisplay(afterUrl, displayMax),
+    ]);
+
+    compareBefore.src = beforeDisplayUrl;
+    compareAfter.src = afterDisplayUrl;
     compareHandle.style.left = '50%';
     compareBefore.style.clipPath = 'inset(0 50% 0 0)';
-    download.href = afterUrl;
     document.getElementById('compareTagRight').textContent = 'APRES · ' + resolutionLabel(selectedResolution || 0);
     const probe = new Image();
     probe.onload = () => {
@@ -719,7 +757,7 @@
       compareVisual.style.aspectRatio = probe.naturalWidth + ' / ' + probe.naturalHeight;
       resultEl.style.display = 'block';
     };
-    probe.src = afterUrl;
+    probe.src = afterDisplayUrl;
   }
 
   // Quand on passe en plein ecran, on calcule nous-memes la taille exacte (en gardant les
@@ -1074,7 +1112,7 @@
       stopFakeProgress(100);
       statusEl.textContent = 'Termine ! Fais glisser la barre pour comparer.';
       document.getElementById('enhancePreviewWrap').style.display = 'none';
-      showCompareResult(URL.createObjectURL(enhanceSelectedFile), data.url);
+      await showCompareResult(URL.createObjectURL(enhanceSelectedFile), data.url);
     } catch (err) {
       stopFakeProgress(0);
       document.getElementById('enhanceProgress').style.display = 'none';
