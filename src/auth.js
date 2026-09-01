@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -36,4 +37,26 @@ function requireAuth(req, res, next) {
   next();
 }
 
-module.exports = { signSession, verifySession, verifyGoogleCredential, requireAuth };
+// ---- Comptes par email + mot de passe (avec code de verification envoye par email) ----
+async function hashPassword(password) {
+  return bcrypt.hash(password, 10);
+}
+
+async function verifyPassword(password, hash) {
+  return bcrypt.compare(password, hash);
+}
+
+// Code a 6 chiffres, valable 15 minutes (voir CODE_TTL_MS dans routes/auth.js).
+function generateVerificationCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+module.exports = {
+  signSession,
+  verifySession,
+  verifyGoogleCredential,
+  requireAuth,
+  hashPassword,
+  verifyPassword,
+  generateVerificationCode,
+};
