@@ -604,10 +604,15 @@
     }
   }
 
-  function initGoogleSignIn(){
-    const clientId = document.querySelector('meta[name="google-signin-client_id"]').content;
+  async function initGoogleSignIn(){
     const fallback = document.getElementById('googleFallbackNote');
-    if (!window.google || !clientId || clientId.startsWith('REPLACE_WITH')) {
+    let clientId = null;
+    try {
+      const res = await fetch('/api/config');
+      const data = await res.json();
+      clientId = data.googleClientId;
+    } catch {}
+    if (!window.google || !clientId) {
       if (fallback) fallback.hidden = false;
       return;
     }
