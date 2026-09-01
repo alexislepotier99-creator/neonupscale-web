@@ -7,6 +7,7 @@ const Stripe = require('stripe');
 const { initSchema } = require('./src/db');
 const authRoutes = require('./src/routes/auth');
 const checkoutRoutes = require('./src/routes/checkout');
+const enhanceRoutes = require('./src/routes/enhance');
 const { handleStripeWebhook } = require('./src/routes/webhook');
 
 const app = express();
@@ -29,8 +30,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/checkout', checkoutRoutes(stripe));
+app.use('/api/enhance', enhanceRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+// Expose au navigateur les identifiants publics necessaires (jamais de secrets ici).
 app.get('/api/config', (req, res) => {
   res.json({ googleClientId: process.env.GOOGLE_CLIENT_ID || null });
 });
