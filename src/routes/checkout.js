@@ -6,7 +6,7 @@ module.exports = function checkoutRoutes(stripe) {
   const router = express.Router();
 
   router.post('/', requireAuth, async (req, res) => {
-    const { plan } = req.body || {};
+    const { plan, skipTrial } = req.body || {};
     if (!['weekly', 'lifetime'].includes(plan)) {
       return res.status(400).json({ error: 'invalid_plan' });
     }
@@ -48,9 +48,13 @@ module.exports = function checkoutRoutes(stripe) {
       if (plan === 'weekly') {
         sessionParams.mode = 'subscription';
         sessionParams.subscription_data = {
-          trial_period_days: 3,
           metadata: { userId: String(user.id) },
         };
+        // On n'offre l'essai de 3 jours que si la personne ne l'a jamais utilise, et si
+        // elle n'a pas explicitement choisi de payer tout de suite ("skipTrial").
+        if (!skipTrial && !user.trial_used) {
+          sessionParams.subscription_data.trial_period_days = 3;
+        }
       } else {
         sessionParams.mode = 'payment';
       }
