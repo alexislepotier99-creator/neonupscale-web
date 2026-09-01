@@ -34,6 +34,14 @@ async function handleStripeWebhook(req, res, stripe) {
           `UPDATE users SET plan = 'weekly', plan_status = $1 WHERE stripe_customer_id = $2`,
           [sub.status, sub.customer]
         );
+        // Des qu'un essai gratuit demarre reellement, on le marque comme utilise pour de
+        // bon (meme si la personne annule avant la fin), pour empecher de le reprendre.
+        if (sub.trial_start) {
+          await pool.query(
+            `UPDATE users SET trial_used = true WHERE stripe_customer_id = $1`,
+            [sub.customer]
+          );
+        }
         break;
       }
       case 'customer.subscription.deleted': {
