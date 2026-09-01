@@ -401,7 +401,7 @@
     <div id="enhanceFormArea" style="display:none;">
       <div class="enhance-layout">
         <div class="enhance-preview-col" id="enhancePreviewCol">
-          <p style="font-size:12px;color:var(--text-dim);text-align:center;margin:0 0 12px;">If the on-screen preview looks off, it may be a browser display glitch — download the photo to see the real, full-quality result.</p>
+          <p style="font-size:13px;font-weight:600;color:var(--gold);text-align:center;margin:0 0 12px;">If the on-screen preview looks off, it may be a browser display glitch — download the photo to see the real, full-quality result.</p>
           <div id="enhanceEmptyState" class="enhance-empty" onclick="document.getElementById('enhanceFile').click()">
             <p style="margin:0 0 16px;">Choose a photo to see the preview here.</p>
             <button type="button" class="btn-ghost" onclick="event.stopPropagation();document.getElementById('enhanceFile').click()">Choose a photo</button>
@@ -546,7 +546,9 @@
           <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Unlimited exports</li>
           <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Cancel in one tap</li>
         </ul>
-        <button class="btn-primary" onclick="choosePlan('weekly','Weekly (€9.99/week)')">Start the free trial</button>
+        <button class="btn-primary" id="weeklyTrialBtn" onclick="choosePlan('weekly','Weekly (€9.99/week) — 3-day free trial', false)">Try free for 3 days</button>
+        <button class="btn-ghost" id="weeklySkipTrialBtn" style="margin-top:10px;width:100%;" onclick="choosePlan('weekly','Weekly (€9.99/week)', true)">Subscribe now for €9.99 (no trial)</button>
+        <p id="trialUsedNote" class="plan-desc" style="margin-top:10px;display:none;">You've already used your free trial — subscribing now starts billing right away.</p>
       </div>
 
       <div class="plan featured">
@@ -676,25 +678,35 @@
   let currentUser = null;
   let pendingPlan = null;
 
-  function choosePlan(plan, planLabel){
+  function choosePlan(plan, planLabel, skipTrial){
     if (!currentUser) {
-      pendingPlan = { plan, planLabel };
+      pendingPlan = { plan, planLabel, skipTrial: !!skipTrial };
       const ctx = document.getElementById('authContext');
       ctx.textContent = 'Log in with Google to continue to: ' + planLabel;
       ctx.hidden = false;
       openAuth();
       return;
     }
-    startCheckout(plan);
+    startCheckout(plan, skipTrial);
   }
 
-  async function startCheckout(plan){
+  function updatePricingForUser(){
+    const trialBtn = document.getElementById('weeklyTrialBtn');
+    const skipBtn = document.getElementById('weeklySkipTrialBtn');
+    const note = document.getElementById('trialUsedNote');
+    if (!trialBtn || !skipBtn || !note) return;
+    const trialUsed = !!(currentUser && currentUser.trialUsed);
+    trialBtn.style.display = trialUsed ? 'none' : '';
+    note.style.display = trialUsed ? '' : 'none';
+  }
+
+  async function startCheckout(plan, skipTrial){
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, skipTrial: !!skipTrial }),
       });
       const data = await res.json();
       if (res.ok && data.url) {
@@ -902,10 +914,12 @@
     currentUser = user;
     closeAuth();
     updateAuthUI();
+    updatePricingForUser();
     if (pendingPlan) {
       const plan = pendingPlan.plan;
+      const skipTrial = pendingPlan.skipTrial;
       pendingPlan = null;
-      startCheckout(plan);
+      startCheckout(plan, skipTrial);
     } else if (pendingTabAfterLogin) {
       const tab = pendingTabAfterLogin;
       pendingTabAfterLogin = null;
@@ -1220,6 +1234,7 @@
     try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
     currentUser = null;
     updateAuthUI();
+    updatePricingForUser();
     showTab('accueil');
     showToast('Logged out.');
   }
@@ -1265,6 +1280,7 @@
         const data = await res.json();
         currentUser = data.user;
         updateAuthUI();
+        updatePricingForUser();
       }
     } catch {}
     const params = new URLSearchParams(location.search);
