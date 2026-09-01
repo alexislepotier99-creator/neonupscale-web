@@ -46,7 +46,11 @@ router.post('/', requireAuth, (req, res) => {
       if (!Number.isFinite(requestedWidth) || requestedWidth <= 0) requestedWidth = planCap;
       const maxWidth = Math.min(requestedWidth, planCap);
 
-      const outputUrl = await enhanceImage(req.file.buffer, { maxWidth });
+      const allowedRatios = ['free', 'square', 'portrait', 'landscape'];
+      const ratio = allowedRatios.includes(req.body.ratio) ? req.body.ratio : 'free';
+      const quality = req.body.quality === 'fast' ? 'fast' : 'max';
+
+      const outputUrl = await enhanceImage(req.file.buffer, { maxWidth, ratio, quality });
 
       const inserted = await pool.query(
         'INSERT INTO enhancements (user_id, max_width, image_data) VALUES ($1, $2, $3) RETURNING id, created_at',
