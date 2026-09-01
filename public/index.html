@@ -1,4 +1,5 @@
 
+
 <!doctype html>
 <html lang="fr">
 <head>
@@ -292,6 +293,19 @@
   .nav-tab{white-space:nowrap;background:transparent;border:none;color:var(--text-dim,#a1a1aa);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:600;transition:.15s;}
   .nav-tab:hover{color:#fff;}
   .nav-tab.active{background:linear-gradient(135deg,#7C3AED,#EC4899);color:#fff;}
+  .res-btn{padding:8px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:.15s;}
+  .res-btn:hover:not(.locked){border-color:#EC4899;}
+  .res-btn.active{background:linear-gradient(135deg,#7C3AED,#EC4899);border-color:transparent;}
+  .res-btn.locked{opacity:.35;cursor:not-allowed;}
+  .compare-visual{position:relative;border-radius:16px;overflow:hidden;width:100%;max-width:420px;margin:0 auto;border:1px solid rgba(255,255,255,.15);background:#000;box-shadow:0 20px 70px rgba(168,85,247,0.18);cursor:ew-resize;touch-action:none;}
+  .compare-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+  .compare-before{clip-path:inset(0 50% 0 0);}
+  .compare-handle{position:absolute;top:0;bottom:0;left:50%;width:0;z-index:5;}
+  .compare-handle-line{position:absolute;top:0;bottom:0;left:-1px;width:3px;background:linear-gradient(180deg,#7C3AED,#EC4899);box-shadow:0 0 16px rgba(168,85,247,0.85);}
+  .compare-handle-grip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#EC4899);display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(168,85,247,0.8);}
+  .compare-tag{position:absolute;top:14px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1.2px;background:rgba(5,4,10,0.65);border:1px solid rgba(255,255,255,0.2);z-index:4;color:#fff;}
+  .compare-tag.left{left:14px;}
+  .compare-tag.right{right:14px;color:#FFD700;}
 </style>
 <div class="wrap">
   <nav>
@@ -352,13 +366,33 @@
       <button class="btn-primary" onclick="scrollToPricing()">Voir les tarifs</button>
     </div>
     <div id="enhanceFormArea" style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div id="resolutionPicker" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+        <button type="button" class="res-btn" id="resBtn1080" onclick="selectResolution(1920)">1080p</button>
+        <button type="button" class="res-btn" id="resBtn2k" onclick="selectResolution(2048)">2K</button>
+        <button type="button" class="res-btn" id="resBtn4k" onclick="selectResolution(3840)">4K</button>
+      </div>
+      <p id="resolutionHint" style="color:var(--text-dim);font-size:12px;margin:0;"></p>
       <input type="file" id="enhanceFile" accept="image/*" style="display:none;">
       <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
         <button class="btn-ghost" id="enhancePickBtn" onclick="document.getElementById('enhanceFile').click()">Choisir une photo</button>
         <button class="btn-primary" id="enhanceSubmitBtn" onclick="submitEnhance()" disabled>Ameliorer</button>
       </div>
       <p id="enhanceStatus" style="color:var(--text-dim);font-size:14px;margin:0;"></p>
-      <div id="enhanceResult" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;"></div>
+      <div id="enhanceResult" style="display:none;flex-direction:column;align-items:center;gap:10px;">
+        <div class="compare-visual" id="compareVisual">
+          <img class="compare-media" id="compareAfter" src="" alt="Apres">
+          <img class="compare-media compare-before" id="compareBefore" src="" alt="Avant">
+          <div class="compare-handle" id="compareHandle">
+            <div class="compare-handle-line"></div>
+            <div class="compare-handle-grip">
+              <svg width="14" height="14" viewBox="0 0 16 16"><path d="M5 3 1 8l4 5M11 3l4 5-4 5" stroke="#0a0212" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <span class="compare-tag left">AVANT</span>
+          <span class="compare-tag right" id="compareTagRight">APRES</span>
+        </div>
+        <a id="compareDownload" href="#" download="neonupscale.jpg" style="font-size:13px;color:#EC4899;">Telecharger la photo amelioree</a>
+      </div>
     </div>
   </section>
 </div>
@@ -577,6 +611,46 @@
   window.addEventListener('pointermove', (e) => { if (heroDragging) updateHeroPosition(e.clientX); });
   window.addEventListener('pointerup', () => { heroDragging = false; });
 
+  // ---------------- Comparateur avant/apres du resultat (meme mecanisme que le hero) ----------------
+  const compareVisual = document.getElementById('compareVisual');
+  const compareBefore = document.getElementById('compareBefore');
+  const compareHandle = document.getElementById('compareHandle');
+  let compareDragging = false;
+
+  function updateComparePosition(clientX){
+    const rect = compareVisual.getBoundingClientRect();
+    let frac = (clientX - rect.left) / rect.width;
+    frac = Math.max(0.02, Math.min(0.98, frac));
+    compareHandle.style.left = frac * 100 + '%';
+    compareBefore.style.clipPath = `inset(0 ${(1 - frac) * 100}% 0 0)`;
+  }
+  compareHandle.addEventListener('pointerdown', (e) => { compareDragging = true; compareHandle.setPointerCapture(e.pointerId); });
+  compareVisual.addEventListener('pointerdown', (e) => {
+    if (e.target === compareHandle || compareHandle.contains(e.target)) return;
+    compareDragging = true;
+    updateComparePosition(e.clientX);
+  });
+  window.addEventListener('pointermove', (e) => { if (compareDragging) updateComparePosition(e.clientX); });
+  window.addEventListener('pointerup', () => { compareDragging = false; });
+
+  function showCompareResult(beforeUrl, afterUrl){
+    const resultEl = document.getElementById('enhanceResult');
+    const compareAfter = document.getElementById('compareAfter');
+    const download = document.getElementById('compareDownload');
+    compareBefore.src = beforeUrl;
+    compareAfter.src = afterUrl;
+    compareHandle.style.left = '50%';
+    compareBefore.style.clipPath = 'inset(0 50% 0 0)';
+    download.href = afterUrl;
+    document.getElementById('compareTagRight').textContent = 'APRES · ' + resolutionLabel(selectedResolution || 0);
+    const probe = new Image();
+    probe.onload = () => {
+      compareVisual.style.aspectRatio = probe.naturalWidth + ' / ' + probe.naturalHeight;
+      resultEl.style.display = 'flex';
+    };
+    probe.src = afterUrl;
+  }
+
   // ---------------- Auth modal (vraie connexion Google) ----------------
   const authOverlay = document.getElementById('authOverlay');
 
@@ -603,6 +677,58 @@
     const active = hasActivePlan(currentUser);
     formArea.style.display = active ? 'flex' : 'none';
     upsell.style.display = active ? 'none' : 'block';
+    if (active) updateResolutionPicker();
+  }
+
+  // ---------------- Choix de la resolution de sortie (selon le plan) ----------------
+  let selectedResolution = null;
+
+  function resolutionOptionsForPlan(user){
+    const cap = (user && user.plan === 'lifetime') ? 3840 : 2048;
+    return [
+      { width: 1920, btnId: 'resBtn1080' },
+      { width: 2048, btnId: 'resBtn2k' },
+      { width: 3840, btnId: 'resBtn4k' },
+    ].map((opt) => ({ ...opt, locked: opt.width > cap }));
+  }
+
+  function selectResolution(width){
+    const options = resolutionOptionsForPlan(currentUser);
+    const opt = options.find((o) => o.width === width);
+    if (!opt || opt.locked) {
+      showToast("Cette resolution necessite l'abonnement a vie.");
+      return;
+    }
+    selectedResolution = width;
+    options.forEach((o) => {
+      const btn = document.getElementById(o.btnId);
+      if (btn) btn.classList.toggle('active', o.width === width);
+    });
+  }
+
+  function updateResolutionPicker(){
+    if (!currentUser) return;
+    const options = resolutionOptionsForPlan(currentUser);
+    options.forEach((o) => {
+      const btn = document.getElementById(o.btnId);
+      if (btn) btn.classList.toggle('locked', o.locked);
+    });
+    const hint = document.getElementById('resolutionHint');
+    if (hint) {
+      hint.textContent = currentUser.plan === 'lifetime'
+        ? 'Ton plan a vie permet la 4K.'
+        : "Ton plan hebdomadaire permet jusqu'a la 2K. Passe a vie pour debloquer la 4K.";
+    }
+    const unlocked = options.filter((o) => !o.locked);
+    const planMax = unlocked[unlocked.length - 1];
+    const current = options.find((o) => o.width === selectedResolution);
+    selectResolution(current && !current.locked ? current.width : planMax.width);
+  }
+
+  function resolutionLabel(width){
+    if (width >= 3840) return '4K';
+    if (width >= 2048) return '2K';
+    return 'HD';
   }
 
   let pendingTabAfterLogin = null;
@@ -747,19 +873,17 @@
     const resultEl = document.getElementById('enhanceResult');
     const submitBtn = document.getElementById('enhanceSubmitBtn');
     statusEl.textContent = 'Traitement en cours (quelques secondes)...';
-    resultEl.innerHTML = '';
+    resultEl.style.display = 'none';
     submitBtn.disabled = true;
     try {
       const formData = new FormData();
       formData.append('photo', enhanceSelectedFile);
+      formData.append('maxWidth', selectedResolution || '');
       const res = await fetch('/api/enhance', { method: 'POST', credentials: 'include', body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || 'echec du traitement');
-      statusEl.textContent = 'Termine !';
-      const beforeUrl = URL.createObjectURL(enhanceSelectedFile);
-      resultEl.innerHTML =
-        '<div><p style="font-size:12px;color:var(--text-dim);text-align:center;">Avant</p><img src="' + beforeUrl + '" style="max-width:260px;border-radius:12px;"></div>' +
-        '<div><p style="font-size:12px;color:var(--text-dim);text-align:center;">Apres</p><img src="' + data.url + '" style="max-width:260px;border-radius:12px;"></div>';
+      statusEl.textContent = 'Termine ! Fais glisser la barre pour comparer.';
+      showCompareResult(URL.createObjectURL(enhanceSelectedFile), data.url);
     } catch (err) {
       statusEl.textContent = 'Erreur : ' + err.message;
     } finally {
