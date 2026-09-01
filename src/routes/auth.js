@@ -30,6 +30,7 @@ function publicUser(row) {
     picture: row.picture,
     plan: row.plan,
     planStatus: row.plan_status,
+    trialUsed: !!row.trial_used,
   };
 }
 
@@ -163,8 +164,6 @@ router.post('/resend-code', async (req, res) => {
 
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [normalizedEmail]);
     const user = result.rows[0];
-    // On repond "ok" meme si le compte n'existe pas ou est deja verifie, pour ne pas
-    // reveler quels emails ont un compte.
     if (!user || user.email_verified || !user.password_hash) return res.json({ ok: true });
 
     const code = generateVerificationCode();
