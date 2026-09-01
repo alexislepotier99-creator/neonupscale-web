@@ -305,10 +305,12 @@
   .res-btn:hover:not(.locked){border-color:#EC4899;}
   .res-btn.active{background:linear-gradient(135deg,#7C3AED,#EC4899);border-color:transparent;}
   .res-btn.locked{opacity:.35;cursor:not-allowed;}
-  .compare-visual{position:relative;border-radius:14px;overflow:hidden;width:100%;max-width:480px;max-height:640px;margin:0 auto;border:1px solid rgba(236,72,153,.5);background:#000;box-shadow:0 0 30px rgba(236,72,153,.25);cursor:ew-resize;touch-action:none;}
+  .compare-visual{position:relative;border-radius:14px;width:100%;max-width:480px;max-height:640px;margin:0 auto;border:1px solid rgba(236,72,153,.5);background:#000;box-shadow:0 0 30px rgba(236,72,153,.25);cursor:ew-resize;touch-action:none;}
   .compare-visual:fullscreen{max-width:none;border-radius:0;}
+  .compare-visual:fullscreen .compare-media{border-radius:0;}
   .compare-visual:-webkit-full-screen{max-width:none;border-radius:0;}
-  .compare-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transform:translateZ(0);backface-visibility:hidden;image-rendering:auto;}
+  .compare-visual:-webkit-full-screen .compare-media{border-radius:0;}
+  .compare-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;border-radius:14px;-webkit-mask-image:-webkit-radial-gradient(white,black);}
   .compare-before{clip-path:inset(0 50% 0 0);}
   .compare-handle{position:absolute;top:0;bottom:0;left:50%;width:0;z-index:5;}
   .compare-handle-line{position:absolute;top:0;bottom:0;left:-1px;width:3px;background:linear-gradient(180deg,#7C3AED,#EC4899);box-shadow:0 0 16px rgba(168,85,247,0.85);}
@@ -323,8 +325,8 @@
   .enhance-layout{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start;margin-top:8px;}
   .enhance-preview-col{position:relative;border-radius:18px;overflow:hidden;background:#000;border:1px solid rgba(255,255,255,.12);min-height:360px;padding:16px;text-align:center;}
   .enhance-empty{color:var(--text-dim);font-size:14px;text-align:center;padding:40px 20px;cursor:pointer;}
-  .enhance-preview-frame{position:relative;width:100%;max-width:480px;max-height:640px;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid rgba(236,72,153,.5);box-shadow:0 0 30px rgba(236,72,153,.25);background:#000;}
-  .enhance-preview-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transform:translateZ(0);backface-visibility:hidden;image-rendering:auto;}
+  .enhance-preview-frame{position:relative;width:100%;max-width:480px;max-height:640px;margin:0 auto;border-radius:14px;border:1px solid rgba(236,72,153,.5);box-shadow:0 0 30px rgba(236,72,153,.25);background:#000;}
+  .enhance-preview-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;border-radius:14px;-webkit-mask-image:-webkit-radial-gradient(white,black);}
   .enhance-controls-col{display:flex;flex-direction:column;gap:20px;background:var(--panel,rgba(255,255,255,.03));border:1px solid var(--panel-border,rgba(255,255,255,.12));border-radius:18px;padding:22px;}
   @media (max-width:860px){
     .enhance-layout{grid-template-columns:1fr;}
@@ -399,6 +401,7 @@
     <div id="enhanceFormArea" style="display:none;">
       <div class="enhance-layout">
         <div class="enhance-preview-col" id="enhancePreviewCol">
+          <p style="font-size:12px;color:var(--text-dim);text-align:center;margin:0 0 12px;">If the on-screen preview looks off, it may be a browser display glitch — download the photo to see the real, full-quality result.</p>
           <div id="enhanceEmptyState" class="enhance-empty" onclick="document.getElementById('enhanceFile').click()">
             <p style="margin:0 0 16px;">Choose a photo to see the preview here.</p>
             <button type="button" class="btn-ghost" onclick="event.stopPropagation();document.getElementById('enhanceFile').click()">Choose a photo</button>
@@ -406,9 +409,9 @@
           <div id="enhancePreviewWrap" style="display:none;">
             <div id="enhancePreviewFrame" class="enhance-preview-frame">
               <img id="enhancePreviewImg" class="enhance-preview-img" src="" alt="Preview">
-              <div id="enhanceProgress" style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(5,4,10,.55);z-index:7;">
-                <div class="progress-ring">
-                  <svg width="120" height="120" viewBox="0 0 140 140">
+              <div id="enhanceProgress" style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(5,4,10,.55);border-radius:14px;z-index:7;">
+                <div class="progress-ring" style="width:120px;height:120px;">
+                  <svg viewBox="0 0 140 140" style="display:block;width:100%;height:100%;">
                     <circle cx="70" cy="70" r="62" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10"></circle>
                     <circle cx="70" cy="70" r="62" fill="none" stroke="url(#progressGrad)" stroke-width="10" stroke-linecap="round" id="progressCircle" transform="rotate(-90 70 70)"></circle>
                     <defs>
@@ -442,7 +445,6 @@
             </div>
             <a id="compareDownload" href="#" download="neonupscale.jpg" style="display:inline-block;margin-top:12px;font-size:13px;color:#EC4899;">Download the enhanced photo</a>
           </div>
-          <p style="font-size:12px;color:var(--text-dim);text-align:center;margin:12px 0 0;">If the on-screen preview looks off, it may be a browser display glitch — download the photo to see the real, full-quality result.</p>
         </div>
         <div class="enhance-controls-col">
           <div>
