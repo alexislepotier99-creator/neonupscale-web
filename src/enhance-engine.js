@@ -1,32 +1,98 @@
-// Ameliore une photo directement sur notre propre serveur, gratuitement et sans limite,
-// avec la librairie "sharp". Ce n'est pas une IA a reseau de neurones (ca, ca coute de
-// l'argent chez un prestataire externe) : c'est un vrai traitement d'image classique
-// (agrandissement de qualite, nettete, couleurs plus vives) applique a la vraie photo
-// envoyee par la personne.
+const express = require('express');
+const multer = require('multer');
+const { pool } = require('../db');
+const { requireAuth } = require('../auth');
+const { enhanceImage } = require('../enhance-engine');
 
-const sharp = require('sharp');
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15 Mo max
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('seules les images sont acceptees pour le moment'));
+    }
+    cb(null, true);
+  },
+});
 
-// maxWidth depend du plan de la personne :
-// - Hebdomadaire : jusqu'a 2K (2048px de large)
-// - A vie : jusqu'a la 4K (3840px de large)
-async function enhanceImage(buffer, { maxWidth = 2048 } = {}) {
-  const image = sharp(buffer, { failOn: 'none' }).rotate(); // .rotate() sans argument = respecte l'orientation EXIF
-  const metadata = await image.metadata();
-
-  const originalWidth = metadata.width || 1024;
-  // On agrandit (x1.6) avec un filtre de qualite, plafonne a la resolution max du plan.
-  const targetWidth = Math.min(Math.round(originalWidth * 1.6), maxWidth);
-
-  const outputBuffer = await image
-    .resize({ width: targetWidth, kernel: 'lanczos3', withoutEnlargement: false })
-    .sharpen({ sigma: 1.1 })
-    .modulate({ saturation: 1.18, brightness: 1.02 })
-    .linear(1.06, -6) // leger boost de contraste
-    .jpeg({ quality: 92 })
-    .toBuffer();
-
-  const base64 = outputBuffer.toString('base64');
-  return `data:image/jpeg;base64,${base64}`;
+function hasActivePlan(user) {
+  return !!user && user.plan !== 'none' && ['active', 'trialing'].includes(user.plan_status);
 }
 
-module.exports = { enhanceImage };
+const router = express.Router();
+
+router.post('/', requireAuth, (req, res) => {
+  upload.single('photo')(req, res, async (uploadErr) => {
+    if (uploadErr) {
+      return res.status(400).json({ error: 'upload_failed', message: uploadErr.message });
+    }
+
+    try {
+      const result = await pool.query('SELECT * FROM users WHERE id = $1', [req.userId]);
+      const user = result.rows[0];
+      if (!user) return res.status(401).json({ error: 'not_authenticated' });
+      if (!hasActivePlan(user)) {
+        return res.status(403).json({ error: 'no_active_plan', message: 'Un abonnement actif est necessaire.' });
+      }
+      if (!req.file) {
+        return res.status(400).json({ error: 'missing_file', message: 'Aucune photo recue.' });
+      }
+
+      // Plan hebdomadaire -> jusqu'a 2K, plan a vie -> jusqu'a la 4K (voir la page tarifs).
+      // La personne peut choisir une resolution plus basse depuis l'interface, mais jamais
+      // au-dessus de ce que son plan autorise (on reverifie toujours cote serveur).
+      const planCap = user.plan === 'lifetime' ? 3840 : 2048;
+      let requestedWidth = parseInt(req.body.maxWidth, 10);
+      if (!Number.isFinite(requestedWidth) || requestedWidth <= 0) requestedWidth = planCap;
+      const maxWidth = Math.min(requestedWidth, planCap);
+
+      const outputUrl = await enhanceImage(req.file.buffer, { maxWidth });
+
+      const inserted = await pool.query(
+        'INSERT INTO enhancements (user_id, max_width, image_data) VALUES ($1, $2, $3) RETURNING id, created_at',
+        [user.id, maxWidth, outputUrl]
+      );
+      // On garde seulement les 20 dernieres photos par personne pour ne pas gonfler la base gratuitement.
+      await pool.query(
+        'DELETE FROM enhancements WHERE user_id = $1 AND id NOT IN (SELECT id FROM enhancements WHERE user_id = $1 ORDER BY created_at DESC LIMIT 20)',
+        [user.id]
+      );
+
+      res.json({ url: outputUrl, id: inserted.rows[0].id, createdAt: inserted.rows[0].created_at });
+    } catch (err) {
+      console.error("Erreur d'amelioration:", err.message);
+      res.status(500).json({ error: 'enhance_failed', message: err.message });
+    }
+  });
+});
+
+router.get('/history', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, max_width, image_data, created_at FROM enhancements WHERE user_id = $1 ORDER BY created_at DESC LIMIT 20',
+      [req.userId]
+    );
+    const items = result.rows.map((r) => ({
+      id: r.id,
+      maxWidth: r.max_width,
+      url: r.image_data,
+      createdAt: r.created_at,
+    }));
+    res.json({ items });
+  } catch (err) {
+    console.error('Erreur historique:', err.message);
+    res.status(500).json({ error: 'history_failed', message: err.message });
+  }
+});
+
+router.delete('/history/:id', requireAuth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM enhancements WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Erreur suppression historique:', err.message);
+    res.status(500).json({ error: 'delete_failed', message: err.message });
+  }
+});
+
+module.exports = router;
