@@ -324,7 +324,25 @@
       <span class="hero-tag left">AVANT</span>
       <span class="hero-tag right">APRES &middot; 4K</span>
     </div>
-    <p class="hero-caption">Rendu 4K reel, traite depuis le telephone &mdash; glisse le curseur pour voir la difference.</p>
+       <p class="hero-caption">Rendu 4K reel, traite depuis le telephone &mdash; glisse le curseur pour voir la difference.</p>
+    </div>
+  </section>
+</div>
+
+<div class="wrap" id="enhanceWrap" style="display:none;">
+  <section class="section" id="enhance">
+    <div class="section-head">
+      <span class="eyebrow">Ton outil</span>
+      <h2>Ameliore une photo maintenant</h2>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <input type="file" id="enhanceFile" accept="image/*" style="display:none;">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+        <button class="btn-ghost" id="enhancePickBtn" onclick="document.getElementById('enhanceFile').click()">Choisir une photo</button>
+        <button class="btn-primary" id="enhanceSubmitBtn" onclick="submitEnhance()" disabled>Ameliorer</button>
+      </div>
+      <p id="enhanceStatus" style="color:var(--text-dim);font-size:14px;margin:0;"></p>
+      <div id="enhanceResult" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;"></div>
     </div>
   </section>
 </div>
@@ -547,14 +565,27 @@
 
   function planLabelFr(p){ return p === 'lifetime' ? 'a vie' : (p === 'weekly' ? 'hebdomadaire' : 'aucun'); }
 
+  function hasActivePlan(user){
+    return !!user && user.plan !== 'none' && ['active', 'trialing'].includes(user.planStatus);
+  }
+
+  function updateEnhanceVisibility(){
+    const wrap = document.getElementById('enhanceWrap');
+    if (!wrap) return;
+    wrap.style.display = hasActivePlan(currentUser) ? 'block' : 'none';
+  }
+
   function updateAuthUI(){
     const btn = document.getElementById('navConnectBtn');
     if (!btn) return;
+    const existingBadge = document.getElementById('navPlanBadge');
+    if (existingBadge) existingBadge.remove();
     if (!currentUser) {
       btn.textContent = 'Se connecter';
       btn.onclick = () => openAuth();
       const existingLogout = document.getElementById('navLogoutBtn');
       if (existingLogout) existingLogout.remove();
+      updateEnhanceVisibility();
       return;
     }
     btn.textContent = currentUser.name ? currentUser.name.split(' ')[0] : currentUser.email;
@@ -562,6 +593,13 @@
       'Connecte : ' + currentUser.email +
       (currentUser.plan !== 'none' ? ' · plan ' + planLabelFr(currentUser.plan) + ' (' + currentUser.planStatus + ')' : ' · aucun abonnement actif')
     );
+    if (hasActivePlan(currentUser)) {
+      const badge = document.createElement('span');
+      badge.id = 'navPlanBadge';
+      badge.textContent = currentUser.plan === 'lifetime' ? 'Abonnement : A vie' : 'Abonnement : Hebdomadaire';
+      badge.style.cssText = 'padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:linear-gradient(135deg,#7C3AED,#EC4899);color:#fff;margin-right:8px;white-space:nowrap;';
+      btn.insertAdjacentElement('beforebegin', badge);
+    }
     if (!document.getElementById('navLogoutBtn')) {
       const logoutBtn = document.createElement('button');
       logoutBtn.id = 'navLogoutBtn';
@@ -570,6 +608,7 @@
       logoutBtn.onclick = doLogout;
       btn.insertAdjacentElement('afterend', logoutBtn);
     }
+    updateEnhanceVisibility();
   }
 
   async function doLogout(){
@@ -634,6 +673,45 @@
     const params = new URLSearchParams(location.search);
     if (params.get('checkout') === 'success') showToast('Paiement reussi ! Merci pour ton abonnement.');
     if (params.get('checkout') === 'cancel') showToast('Paiement annule.');
+  }
+
+  // ---------------- Amelioration de photo (vraie IA) ----------------
+  let enhanceSelectedFile = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('enhanceFile');
+    if (!fileInput) return;
+    fileInput.addEventListener('change', () => {
+      enhanceSelectedFile = fileInput.files[0] || null;
+      document.getElementById('enhanceSubmitBtn').disabled = !enhanceSelectedFile;
+      document.getElementById('enhanceStatus').textContent = enhanceSelectedFile ? enhanceSelectedFile.name + ' selectionnee.' : '';
+    });
+  });
+
+  async function submitEnhance(){
+    if (!enhanceSelectedFile) return;
+    const statusEl = document.getElementById('enhanceStatus');
+    const resultEl = document.getElementById('enhanceResult');
+    const submitBtn = document.getElementById('enhanceSubmitBtn');
+    statusEl.textContent = 'Traitement en cours (quelques secondes)...';
+    resultEl.innerHTML = '';
+    submitBtn.disabled = true;
+    try {
+      const formData = new FormData();
+      formData.append('photo', enhanceSelectedFile);
+      const res = await fetch('/api/enhance', { method: 'POST', credentials: 'include', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || data.error || 'echec du traitement');
+      statusEl.textContent = 'Termine !';
+      const beforeUrl = URL.createObjectURL(enhanceSelectedFile);
+      resultEl.innerHTML =
+        '<div><p style="font-size:12px;color:var(--text-dim);text-align:center;">Avant</p><img src="' + beforeUrl + '" style="max-width:260px;border-radius:12px;"></div>' +
+        '<div><p style="font-size:12px;color:var(--text-dim);text-align:center;">Apres</p><img src="' + data.url + '" style="max-width:260px;border-radius:12px;"></div>';
+    } catch (err) {
+      statusEl.textContent = 'Erreur : ' + err.message;
+    } finally {
+      submitBtn.disabled = false;
+    }
   }
 
   document.getElementById('authClose').addEventListener('click', cancelAuth);
