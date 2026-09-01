@@ -401,10 +401,12 @@
     <div id="enhanceFormArea" style="display:none;">
       <div class="enhance-layout">
         <div class="enhance-preview-col" id="enhancePreviewCol">
-          <p style="font-size:13px;font-weight:600;color:var(--gold);text-align:center;margin:0 0 12px;">If the on-screen preview looks off, it may be a browser display glitch — download the photo to see the real, full-quality result.</p>
+          <p id="enhanceGlitchNote" style="display:none;font-size:13px;font-weight:600;color:var(--gold);text-align:center;margin:0 0 12px;">If the on-screen preview looks off, it may be a browser display glitch — download the photo to see the real, full-quality result.</p>
           <div id="enhanceEmptyState" class="enhance-empty" onclick="document.getElementById('enhanceFile').click()">
-            <p style="margin:0 0 16px;">Choose a photo to see the preview here.</p>
-            <button type="button" class="btn-ghost" onclick="event.stopPropagation();document.getElementById('enhanceFile').click()">Choose a photo</button>
+            <p style="margin:0 0 20px;">Choose a photo to see the preview here.</p>
+            <div style="display:flex;justify-content:flex-end;padding-right:6px;">
+              <button type="button" class="btn-primary" onclick="event.stopPropagation();document.getElementById('enhanceFile').click()" style="padding:13px 28px;font-size:14px;box-shadow:0 8px 24px rgba(124,58,237,.45);">Choose a photo →</button>
+            </div>
           </div>
           <div id="enhancePreviewWrap" style="display:none;">
             <div id="enhancePreviewFrame" class="enhance-preview-frame">
@@ -1302,6 +1304,7 @@
       const previewWrap = document.getElementById('enhancePreviewWrap');
       const previewImg = document.getElementById('enhancePreviewImg');
       const emptyState = document.getElementById('enhanceEmptyState');
+      const glitchNote = document.getElementById('enhanceGlitchNote');
       if (enhanceSelectedFile) {
         const objectUrl = URL.createObjectURL(enhanceSelectedFile);
         previewImg.onload = () => {
@@ -1313,9 +1316,11 @@
         });
         previewWrap.style.display = 'block';
         if (emptyState) emptyState.style.display = 'none';
+        if (glitchNote) glitchNote.style.display = 'block';
       } else {
         previewWrap.style.display = 'none';
         if (emptyState) emptyState.style.display = 'block';
+        if (glitchNote) glitchNote.style.display = 'none';
       }
     });
   });
