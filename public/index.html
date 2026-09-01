@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="fr">
 <head>
@@ -286,11 +287,22 @@
 </head>
 <body>
 
+<style>
+  .nav-tabs{display:flex;gap:4px;overflow-x:auto;}
+  .nav-tab{white-space:nowrap;background:transparent;border:none;color:var(--text-dim,#a1a1aa);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:600;transition:.15s;}
+  .nav-tab:hover{color:#fff;}
+  .nav-tab.active{background:linear-gradient(135deg,#7C3AED,#EC4899);color:#fff;}
+</style>
 <div class="wrap">
   <nav>
     <div class="brand">
       <span class="brand-mark">&#9670;</span>
       <span class="brand-name">NEON<span class="accent">UPSCALE</span></span>
+    </div>
+    <div class="nav-tabs" id="navTabs">
+      <button class="nav-tab active" id="navTabAccueil" onclick="showTab('accueil')">Accueil</button>
+      <button class="nav-tab" id="navTabAmeliorer" onclick="showTab('ameliorer')">Ameliorer</button>
+      <button class="nav-tab" id="navTabHistorique" onclick="showTab('historique')">Historique</button>
     </div>
     <div class="nav-actions">
       <button class="nav-link" id="navConnectBtn" onclick="openAuth()">Se connecter</button>
@@ -299,7 +311,7 @@
   </nav>
 </div>
 
-<div class="wrap">
+<div class="wrap tab-panel tab-accueil">
   <section class="hero">
     <div>
       <span class="eyebrow">Amelioration photo par IA</span>
@@ -329,13 +341,17 @@
   </section>
 </div>
 
-<div class="wrap" id="enhanceWrap" style="display:none;">
+<div class="wrap tab-panel tab-ameliorer" id="enhanceWrap" style="display:none;">
   <section class="section" id="enhance">
     <div class="section-head">
       <span class="eyebrow">Ton outil</span>
       <h2>Ameliore une photo maintenant</h2>
     </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+    <div id="enhanceUpsell" style="display:none;text-align:center;padding:24px 0;">
+      <p style="color:var(--text-dim);margin-bottom:16px;">Un abonnement actif est necessaire pour ameliorer tes photos.</p>
+      <button class="btn-primary" onclick="scrollToPricing()">Voir les tarifs</button>
+    </div>
+    <div id="enhanceFormArea" style="display:flex;flex-direction:column;align-items:center;gap:16px;">
       <input type="file" id="enhanceFile" accept="image/*" style="display:none;">
       <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
         <button class="btn-ghost" id="enhancePickBtn" onclick="document.getElementById('enhanceFile').click()">Choisir une photo</button>
@@ -347,7 +363,18 @@
   </section>
 </div>
 
-<div class="wrap">
+<div class="wrap tab-panel tab-historique" id="historiqueWrap" style="display:none;">
+  <section class="section" id="historique">
+    <div class="section-head">
+      <span class="eyebrow">Tes photos</span>
+      <h2>Historique</h2>
+    </div>
+    <p id="historiqueStatus" style="color:var(--text-dim);font-size:14px;text-align:center;"></p>
+    <div id="historiqueGrid" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;"></div>
+  </section>
+</div>
+
+<div class="wrap tab-panel tab-accueil">
   <section class="section" id="how">
     <div class="section-head">
       <span class="eyebrow">Le principe</span>
@@ -373,7 +400,7 @@
   </section>
 </div>
 
-<div class="wrap">
+<div class="wrap tab-panel tab-accueil">
   <section class="section" id="pricing">
     <div class="section-head">
       <span class="eyebrow">Tarifs</span>
@@ -420,7 +447,7 @@
   </section>
 </div>
 
-<div class="wrap">
+<div class="wrap tab-panel tab-accueil">
   <section class="section" id="faq">
     <div class="section-head">
       <span class="eyebrow">Questions frequentes</span>
@@ -483,8 +510,8 @@
 </div>
 
 <script>
-  function scrollToPricing(){ document.getElementById('pricing').scrollIntoView({behavior:'smooth', block:'start'}); }
-  function scrollToHow(){ document.getElementById('how').scrollIntoView({behavior:'smooth', block:'start'}); }
+  function scrollToPricing(){ showTab('accueil'); setTimeout(() => document.getElementById('pricing').scrollIntoView({behavior:'smooth', block:'start'}), 0); }
+  function scrollToHow(){ showTab('accueil'); setTimeout(() => document.getElementById('how').scrollIntoView({behavior:'smooth', block:'start'}), 0); }
 
   function showToast(msg){
     const toast = document.getElementById('toast');
@@ -570,9 +597,30 @@
   }
 
   function updateEnhanceVisibility(){
-    const wrap = document.getElementById('enhanceWrap');
-    if (!wrap) return;
-    wrap.style.display = hasActivePlan(currentUser) ? 'block' : 'none';
+    const formArea = document.getElementById('enhanceFormArea');
+    const upsell = document.getElementById('enhanceUpsell');
+    if (!formArea || !upsell) return;
+    const active = hasActivePlan(currentUser);
+    formArea.style.display = active ? 'flex' : 'none';
+    upsell.style.display = active ? 'none' : 'block';
+  }
+
+  let pendingTabAfterLogin = null;
+
+  function showTab(name){
+    if (!currentUser && (name === 'ameliorer' || name === 'historique')) {
+      pendingTabAfterLogin = name;
+      openAuth();
+      return;
+    }
+    document.querySelectorAll('.tab-panel').forEach((el) => { el.style.display = 'none'; });
+    document.querySelectorAll('.tab-' + name).forEach((el) => { el.style.display = ''; });
+    document.querySelectorAll('.nav-tab').forEach((el) => el.classList.remove('active'));
+    const navBtn = document.getElementById('navTab' + name.charAt(0).toUpperCase() + name.slice(1));
+    if (navBtn) navBtn.classList.add('active');
+    if (name === 'ameliorer') updateEnhanceVisibility();
+    if (name === 'historique') loadHistory();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function updateAuthUI(){
@@ -615,6 +663,7 @@
     try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
     currentUser = null;
     updateAuthUI();
+    showTab('accueil');
     showToast('Deconnecte.');
   }
 
@@ -635,6 +684,10 @@
         const plan = pendingPlan.plan;
         pendingPlan = null;
         startCheckout(plan);
+      } else if (pendingTabAfterLogin) {
+        const tab = pendingTabAfterLogin;
+        pendingTabAfterLogin = null;
+        showTab(tab);
       } else {
         showToast('Connecte en tant que ' + (currentUser.name || currentUser.email) + '.');
       }
@@ -711,6 +764,48 @@
       statusEl.textContent = 'Erreur : ' + err.message;
     } finally {
       submitBtn.disabled = false;
+    }
+  }
+
+  // ---------------- Historique ----------------
+  async function loadHistory(){
+    const grid = document.getElementById('historiqueGrid');
+    const status = document.getElementById('historiqueStatus');
+    if (!grid || !status) return;
+    status.textContent = 'Chargement...';
+    grid.innerHTML = '';
+    try {
+      const res = await fetch('/api/enhance/history', { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || data.error || 'echec du chargement');
+      if (!data.items || data.items.length === 0) {
+        status.textContent = 'Aucune photo amelioree pour le moment.';
+        return;
+      }
+      status.textContent = '';
+      data.items.forEach((item) => {
+        const resLabel = item.maxWidth >= 3840 ? '4K' : (item.maxWidth >= 2048 ? '2K' : 'HD');
+        const dateLabel = new Date(item.createdAt).toLocaleDateString('fr-FR');
+        const card = document.createElement('div');
+        card.style.cssText = 'text-align:center;width:220px;';
+        card.innerHTML =
+          '<img src="' + item.url + '" style="max-width:220px;border-radius:12px;display:block;margin:0 auto 6px;">' +
+          '<p style="font-size:12px;color:var(--text-dim);margin:0 0 4px;">' + resLabel + ' &middot; ' + dateLabel + '</p>' +
+          '<a href="' + item.url + '" download="neonupscale-' + item.id + '.jpg" style="font-size:12px;color:#EC4899;margin-right:10px;">Telecharger</a>' +
+          '<button onclick="deleteHistoryItem(' + item.id + ')" style="font-size:12px;color:var(--text-dim);background:none;border:none;cursor:pointer;text-decoration:underline;">Supprimer</button>';
+        grid.appendChild(card);
+      });
+    } catch (err) {
+      status.textContent = 'Erreur : ' + err.message;
+    }
+  }
+
+  async function deleteHistoryItem(id){
+    try {
+      await fetch('/api/enhance/history/' + id, { method: 'DELETE', credentials: 'include' });
+      loadHistory();
+    } catch (err) {
+      showToast('Suppression impossible.');
     }
   }
 
