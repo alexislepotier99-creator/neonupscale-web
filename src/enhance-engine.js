@@ -47,19 +47,25 @@ async function enhanceImage(buffer, { maxWidth = 2048, ratio = 'free', quality =
     height: targetHeight,
     fit,
     position: 'centre',
-    // "lanczos3" donnait de tres bons details mais pouvait creer un fin liseret clair
-    // ("ringing") le long des bords tres contrastes (ex: un rebord sombre sur un plafond
-    // clair) - "mitchell" est presque aussi net mais beaucoup plus doux sur ces bords.
-    kernel: isFast ? 'nearest' : 'mitchell',
+    // On avait soupconne "lanczos3" de creer un liseret blanc sur les bords tres
+    // contrastes, mais en comparant avec l'apercu AVANT tout traitement, ce liseret etait
+    // deja present sur la photo d'origine (ex: un bandeau lumineux au plafond) - ce n'est
+    // pas notre traitement qui le cree. On peut donc reprendre "lanczos3", le plus net.
+    kernel: isFast ? 'nearest' : 'lanczos3',
     withoutEnlargement: false,
   });
 
   if (!isFast) {
-    // Nettete et contraste plus mesures qu'avant, toujours plus nets/vifs que l'original
-    // mais sans exagerer les bords (ce qui creait ce liseret blanc parasite).
-    pipeline = pipeline.sharpen({ sigma: 0.6 }).modulate({ saturation: 1.15, brightness: 1.02 }).linear(1.03, -3);
+    // Rendu beaucoup plus marque : contraste local ("clahe", façon HDR/pro) + nettete +
+    // couleurs et contraste global plus vifs, pour un resultat qui tranche vraiment avec
+    // l'original (effet "comme pris avec un vrai bon appareil photo").
+    pipeline = pipeline
+      .clahe({ width: 8, height: 8, maxSlope: 3 })
+      .sharpen({ sigma: 1.0, m1: 1, m2: 0.6 })
+      .modulate({ saturation: 1.28, brightness: 1.05 })
+      .linear(1.08, -9);
   } else {
-    pipeline = pipeline.sharpen({ sigma: 0.5 });
+    pipeline = pipeline.sharpen({ sigma: 0.6 });
   }
 
   const outputBuffer = await pipeline.jpeg({ quality: isFast ? 80 : 92 }).toBuffer();
