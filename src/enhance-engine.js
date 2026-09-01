@@ -47,14 +47,19 @@ async function enhanceImage(buffer, { maxWidth = 2048, ratio = 'free', quality =
     height: targetHeight,
     fit,
     position: 'centre',
-    kernel: isFast ? 'nearest' : 'lanczos3',
+    // "lanczos3" donnait de tres bons details mais pouvait creer un fin liseret clair
+    // ("ringing") le long des bords tres contrastes (ex: un rebord sombre sur un plafond
+    // clair) - "mitchell" est presque aussi net mais beaucoup plus doux sur ces bords.
+    kernel: isFast ? 'nearest' : 'mitchell',
     withoutEnlargement: false,
   });
 
   if (!isFast) {
-    pipeline = pipeline.sharpen({ sigma: 1.1 }).modulate({ saturation: 1.18, brightness: 1.02 }).linear(1.06, -6); // leger boost de contraste
+    // Nettete et contraste plus mesures qu'avant, toujours plus nets/vifs que l'original
+    // mais sans exagerer les bords (ce qui creait ce liseret blanc parasite).
+    pipeline = pipeline.sharpen({ sigma: 0.6 }).modulate({ saturation: 1.15, brightness: 1.02 }).linear(1.03, -3);
   } else {
-    pipeline = pipeline.sharpen({ sigma: 0.6 });
+    pipeline = pipeline.sharpen({ sigma: 0.5 });
   }
 
   const outputBuffer = await pipeline.jpeg({ quality: isFast ? 80 : 92 }).toBuffer();
